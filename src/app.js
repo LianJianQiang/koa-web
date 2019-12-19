@@ -9,14 +9,34 @@ const logger = require('koa-logger')
 const session = require('koa-generic-session');
 const redistore = require('koa-redis');
 
-const { REDIS_CFG } = require('./cfg/db');
+// const koaJWT = require('koa-jwt');
 
-const index = require('./routes/index')
-const users = require('./routes/users')
+const { isProd } = require('./utils/env')
+
+const { REDIS_CONF } = require('./conf/db');
+
+// const jwtUserAPIRouter = require('./routes/api/jwt')
+const userAPIRouter = require('./routes/api/user')
+const userViewRouter = require('./routes/view/user')
+const errorViewRouter = require('./routes/view/error')
+
+// const { JWT_SECRET_KEY } = require('./conf/secretKeys')
 
 // error handler
-// 页面显示
-onerror(app)
+let onerrorConf = {}
+if (isProd) {
+    onerrorConf = {
+        redirect: '/error'
+    }
+}
+onerror(app, onerrorConf)
+
+// // JWT 加密认证
+// app.use(koaJWT({
+//     secret: JWT_SECRET_KEY
+// }).unless({
+//     path: [/\/users\/login/]     // 定义哪些目录不需要验证
+// }))
 
 // middlewares
 app.use(bodyparser({
@@ -30,14 +50,6 @@ app.use(views(__dirname + '/views', {
     extension: 'ejs'
 }))
 
-// // logger
-// app.use(async (ctx, next) => {
-//     const start = new Date()
-//     await next()
-//     const ms = new Date() - start
-//     console.log(`${ctx.method} ${ctx.url} - ${ms}ms`)
-// })
-
 // session配置
 app.keys = ['Ussdw_wq_992**2'];
 app.use(session({
@@ -49,14 +61,17 @@ app.use(session({
         maxAge: 24 * 60 * 60 * 1000,
     },
     store: redistore({
-        all: `${REDIS_CFG.host}:${REDIS_CFG.prot}`
+        all: `${REDIS_CONF.host}:${REDIS_CONF.prot}`
     })
 }))
 
-
 // routes
-app.use(index.routes(), index.allowedMethods())
-app.use(users.routes(), users.allowedMethods())
+// app.use(jwtUserAPIRouter.routes(), jwtUserAPIRouter.allowedMethods())       // JWT DEMO
+
+app.use(userAPIRouter.routes(), userAPIRouter.allowedMethods())
+
+app.use(userViewRouter.routes(), userViewRouter.allowedMethods())
+app.use(errorViewRouter.routes(), errorViewRouter.allowedMethods()) // 404 路由注册到最后面
 
 // error-handling
 app.on('error', (err, ctx) => {

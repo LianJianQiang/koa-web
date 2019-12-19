@@ -1,8 +1,6 @@
+const seq = require('../seq');
+const { STRING, DECIMAL } = require('../types');
 
-const seq = require('../seq')
-const { STRING, DECIMAL } = require('../types')
-
-// users
 const User = seq.define('user', {
     userName: {
         type: STRING,
@@ -17,18 +15,18 @@ const User = seq.define('user', {
     },
     nickName: {
         type: STRING,
-        allowNull: false,
+        allowNull: true,
         comment: '昵称'
     },
     gender: {
         type: DECIMAL,
         allowNull: false,
         defaultValue: 3,
-        comment: '性别（1 男性，2 女性，3 保密）'
+        comment: '性别，1:男，2:女，3:保密'
     },
     picture: {
         type: STRING,
-        comment: '头像，图片地址'
+        comment: '头像，url'
     },
     city: {
         type: STRING,
@@ -36,4 +34,6 @@ const User = seq.define('user', {
     }
 })
 
-module.exports = User
+module.exports = User;
+
+
