@@ -1,7 +1,7 @@
 
-const { getUserInfo, createUser } = require('../services/user');
+const { getUserInfo, createUser, deleteUser, updateUser } = require('../services/user');
 const { SuccessModel, ErrorModel } = require('../model/ResModel')
-const ErrorInfo = require('../model/ErrorInfo');
+const ERROR_INFO = require('../model/ErrorInfo');
 const doCrypto = require('../utils/cryp')
 
 /**
@@ -14,7 +14,7 @@ const isExist = async (userName) => {
     if (userInfo) {
         return new SuccessModel(userInfo);
     } else {
-        return new ErrorModel(ErrorInfo.registerUserNameNotExistInfo)
+        return new ErrorModel(ERROR_INFO.registerUserNameNotExistInfo)
     }
 }
 
@@ -28,7 +28,7 @@ const register = async ({ userName, password, gender }) => {
     const userInfo = await getUserInfo(userName);
 
     if (userInfo) {
-        return new ErrorModel(ErrorInfo.registerUserNameExistInfo);
+        return new ErrorModel(ERROR_INFO.registerUserNameExistInfo);
     }
 
     try {
@@ -36,11 +36,120 @@ const register = async ({ userName, password, gender }) => {
         return new SuccessModel();
     } catch (err) {
         console.log(err.message, err.stack)
-        return new ErrorModel(ErrorInfo.registerFailInfo)
+        return new ErrorModel(ERROR_INFO.registerFailInfo)
     }
 }
 
+/**
+ * 用户登录
+ * @param {Object} ctx          koa2 ctx
+ * @param {String} userName
+ * @param {String} password
+ */
+const login = async ({ ctx, userName, password }) => {
+    const userInfo = await getUserInfo(userName, password);
+
+    if (!userInfo) {
+        // 登录失败
+        return new ErrorModel(ERROR_INFO.loginFailInfo)
+    }
+
+    // 登录成功
+    if (!ctx.session.userInfo) {
+        ctx.session.userInfo = userInfo
+    }
+    return new SuccessModel()
+}
+
+/**
+ * 删除当前用户
+ * @param {string} userName 用户名
+ */
+async function deleteCurUser (userName) {
+    const result = await deleteUser(userName)
+    if (result) {
+        // 成功
+        return new SuccessModel()
+    }
+    // 失败
+    return new ErrorModel(ERROR_INFO.deleteUserFailInfo)
+}
+
+/**
+ * 修改个人信息
+ * @param {Object} ctx ctx
+ * @param {string} nickName 昵称
+ * @param {string} city 城市
+ * @param {string} picture 头像
+ */
+const changeInfo = async (ctx, { nickName, city, picture }) => {
+    const { userName } = ctx.session.userInfo;
+
+    if (!nickName) {
+        nickName = userName
+    }
+
+    const result = await updateUser({
+        newNickName: nickName,
+        newCity: city,
+        newPicture: picture
+    }, { userName })
+
+    if (result) {
+        // 修改成功
+        Object.assign(ctx.session.userInfo, {
+            nickName, city, picture
+        })
+
+        return new SuccessModel()
+    }
+
+    // 失败
+    return new ErrorModel(ERROR_INFO.changeInfoFailInfo)
+}
+
+/**
+ * 修改密码
+ * @param {string} userName 用户名
+ * @param {string} password 当前密码
+ * @param {string} newPassword 新密码
+ */
+async function changePassword ({ userName, password, newPassword }) {
+    const result = await updateUser(
+        {
+            newPassword: doCrypto(newPassword)
+        },
+        {
+            userName,
+            password: doCrypto(password)
+        }
+    )
+    if (result) {
+        // 成功
+        return new SuccessModel()
+    }
+    // 失败
+    return new ErrorModel(changePasswordFailInfo)
+}
+
+/**
+ * 退出登录
+ * @param {Object} ctx ctx
+ */
+async function logout (ctx) {
+    delete ctx.session.userInfo
+    return new SuccessModel()
+}
+
+
 module.exports = {
     isExist,
-    register
+    register,
+    login,
+
+    deleteCurUser,
+
+    changeInfo,
+    changePassword,
+    logout
 }
