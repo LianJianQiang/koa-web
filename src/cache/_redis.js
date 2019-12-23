@@ -1,8 +1,8 @@
 const redis = require('redis')
 
-const { REDIS_CFG } = require('../cfg/db.js')
+const { REDIS_CONF } = require('../conf/db.js')
 
-const redisClient = redis.createClient(REDIS_CFG.prot, REDIS_CFG.host)
+const redisClient = redis.createClient(REDIS_CONF.prot, REDIS_CONF.host)
 
 redisClient.on('error', err => {
     console.log('redisClient error : ', err)
@@ -50,5 +50,6 @@ function get (key) {
 }
 
 module.exports = {
-    set
+    set,
+    get
 }
