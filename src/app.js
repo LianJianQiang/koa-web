@@ -20,6 +20,9 @@ const { REDIS_CONF } = require('./conf/db');
 // const jwtUserAPIRouter = require('./routes/api/jwt')
 const utilsAPIRouter = require('./routes/api/utils')
 const userAPIRouter = require('./routes/api/user')
+const homeAPIRouter = require('./routes/api/blog-home.js')
+
+const blogViewRouter = require('./routes/view/blog')
 const userViewRouter = require('./routes/view/user')
 const errorViewRouter = require('./routes/view/error')
 
@@ -75,7 +78,9 @@ app.use(session({
 
 app.use(utilsAPIRouter.routes(), utilsAPIRouter.allowedMethods())
 app.use(userAPIRouter.routes(), userAPIRouter.allowedMethods())
+app.use(homeAPIRouter.routes(), homeAPIRouter.allowedMethods())
 
+app.use(blogViewRouter.routes(), blogViewRouter.allowedMethods())
 app.use(userViewRouter.routes(), userViewRouter.allowedMethods())
 app.use(errorViewRouter.routes(), errorViewRouter.allowedMethods()) // 404 路由注册到最后面
 
