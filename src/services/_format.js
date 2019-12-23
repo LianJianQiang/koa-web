@@ -6,7 +6,7 @@ const { timeFormat } = require('../utils/dt')
  * 用户默认头像
  * @param {Object} obj 用户对象
  */
-function _formatUserPicture(obj) {
+function _formatUserPicture (obj) {
     if (obj.picture == null) {
         obj.picture = DEFAULT_PICTURE
     }
@@ -17,7 +17,7 @@ function _formatUserPicture(obj) {
  * 格式化用户信息
  * @param {Array|Object} list 用户列表或者单个用户对象
  */
-function formatUser(list) {
+function formatUser (list) {
     if (list == null) {
         return list
     }
@@ -35,7 +35,7 @@ function formatUser(list) {
  * 格式化数据的时间
  * @param {Object} obj 数据
  */
-function _formatDBTime(obj) {
+function _formatDBTime (obj) {
     obj.createdAtFormat = timeFormat(obj.createdAt)
     obj.updatedAtFormat = timeFormat(obj.updatedAt)
     return obj
@@ -45,7 +45,7 @@ function _formatDBTime(obj) {
  * 格式化微博内容
  * @param {Object} obj 微博数据对象
  */
-function _formatContent(obj) {
+function _formatContent (obj) {
     obj.contentFormat = obj.content
 
     // 格式化 @
@@ -65,7 +65,7 @@ function _formatContent(obj) {
  * 格式化微博信息
  * @param {Array|Object} list 微博列表或者单个微博对象
  */
-function formatBlog(list) {
+function formatBlog (list) {
     if (list == null) {
         return list
     }
