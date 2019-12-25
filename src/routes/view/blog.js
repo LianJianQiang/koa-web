@@ -7,32 +7,51 @@ const { loginRedirect } = require('../../middlewares/loginChecks')
 const { getProfileBlogList } = require('../../controller/blog-profile')
 const { getSquareBlogList } = require('../../controller/blog-square')
 const { isExist } = require('../../controller/user')
-const { getFans } = require('../../controller/user-relation')
+const { getFans, getFollowers } = require('../../controller/user-relation')
+const { getHomeBlogList } = require('../../controller/blog-home')
+const { getAtMeCount, getAtMeBlogList, markAsRead } = require('../../controller/blog-at')
 
 
+// 首页
+router.get('/', loginRedirect, async (ctx, next) => {
+    const userInfo = ctx.session.userInfo
+    const { id: userId } = userInfo
 
-router.get('/', async (ctx, next) => {
-    const { userInfo = {} } = ctx.session;
+    // 获取第一页数据
+    const result = await getHomeBlogList(userId)
+    const { isEmpty, blogList, pageSize, pageIndex, count } = result.data
+
+    // 获取粉丝
+    const fansResult = await getFans(userId)
+    const { count: fansCount, fansList } = fansResult.data
+
+    // 获取关注人列表
+    const followersResult = await getFollowers(userId)
+    const { count: followersCount, followersList } = followersResult.data
+
+    // 获取 @ 数量
+    const atCountResult = await getAtMeCount(userId)
+    const { count: atCount } = atCountResult.data
 
     await ctx.render('index', {
         userData: {
-            userInfo: userInfo,
+            userInfo,
             fansData: {
-                count: 0,
-                list: []
+                count: fansCount,
+                list: fansList
             },
             followersData: {
-                count: 0,
-                list: []
+                count: followersCount,
+                list: followersList
             },
-            atCount: 0
+            atCount
         },
         blogData: {
-            isEmpty: true,
-            blogList: [],
-            pageSize: PAGE_SIZE,
-            pageIndex: 1,
-            count: 0
+            isEmpty,
+            blogList,
+            pageSize,
+            pageIndex,
+            count
         }
     })
 })
@@ -64,11 +83,26 @@ router.get('/profile/:userName', async (ctx, next) => {
         curUserInfo = existResult.data;
     }
 
+    // 获取微博第一页数据
     const result = await getProfileBlogList(curUserName, 0)
     const { isEmpty, blogList, pageSize, pageIndex, count } = result.data
 
+    // 获取粉丝
     const fansResult = await getFans(curUserInfo.id);
     const { count: fansCount, fansList } = fansResult.data
+
+    // 获取关注人列表
+    const followersResult = await getFollowers(curUserInfo.id)
+    const { count: followersCount, followersList } = followersResult.data
+
+    // 我是否关注了此人？
+    const amIFollowed = fansList.some(item => {
+        return item.userName === myUserName
+    })
+
+    // 获取 @ 数量
+    const atCountResult = await getAtMeCount(myUserInfo.id)
+    const { count: atCount } = atCountResult.data
 
 
     await ctx.render('profile', {
@@ -87,11 +121,11 @@ router.get('/profile/:userName', async (ctx, next) => {
                 list: fansList
             },
             followersData: {
-                count: 0,
-                list: []
+                count: followersCount,
+                list: followersList
             },
-            amIFollowed: false,
-            atCount: 0
+            amIFollowed,
+            atCount
         }
     })
 })

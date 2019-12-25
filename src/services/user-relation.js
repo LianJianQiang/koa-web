@@ -1,6 +1,3 @@
-/**
- * @description 用户关系 services
- */
 
 const { User, UserRelation } = require('../db/model/index')
 const { formatUser } = require('./_format')
@@ -21,14 +18,13 @@ async function getUsersByFollower (followerId) {
                 model: UserRelation,
                 where: {
                     followerId,
-                    // userId: {
-                    //     [Sequelize.Op.ne]: followerId
-                    // }
+                    userId: {
+                        [Sequelize.Op.ne]: followerId
+                    }
                 }
             }
         ]
     })
-
     // result.count 总数
     // result.rows 查询结果，数组
 
